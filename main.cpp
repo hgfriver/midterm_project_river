@@ -35,8 +35,8 @@ EventQueue queueDNN(32 * EVENTS_EVENT_SIZE);
 
 Thread threadDNN(osPriorityNormal, 120*1024);
 
-int music = 0;
-int mode = 0;
+int music = 1;
+int mode = 1;
 int selection = 0;
 
 int song[120];
@@ -46,6 +46,11 @@ char serialInBuffer[bufferLength];
 int serialCount = 0;
 
 int i = 0;
+
+char Little_Luck[8] = {'L','R','L','R','U','U','R','L'};
+char Pu_Gung_Ing[8] = {'U','R','L','R','U','U','R','U'};
+char Happy_Birthday[8] = {'U','R','L','U','U','U','R','R'};
+int point = 0;
 
 
 // Return the result of the last prediction
@@ -90,20 +95,24 @@ int PredictGesture(float* output) {
 
 void uLCDprint(void){
   if(music == 0){
-    uLCD.cls();
-    uLCD.locate(1, 1);
-    uLCD.printf("\nTwinkle Twinkle   \nLittle Star       \nLRLRUURL\n");
+    uLCD.locate(0, 11);
+    uLCD.printf("           \n            \n            \n            \n");
+    uLCD.locate(1, 5);
+    uLCD.printf("\nLittle Luck     \n            \n           \nLRLRUURL\n");
   }else if(music == 1){
-    uLCD.cls();
-    uLCD.locate(1, 1);
-    uLCD.printf("\nTwo-Tigers        \n                  \nURLRUURU\n");
+    uLCD.locate(0, 11);
+    uLCD.printf("           \n          ");
+    uLCD.locate(1, 5);
+    uLCD.printf("\nPu Gung Ing         \n          \nURLRUURU\n");
   }else if(music == 2){
-    uLCD.cls();
-    uLCD.locate(1, 1);
-    uLCD.printf("\nLittle Bee        \n                  \nURLUUURR\n");
+    uLCD.locate(0, 11);
+    uLCD.printf("           \n          ");
+    uLCD.locate(1, 5);
+    uLCD.printf("\nHappy Birthday         \n          \nURLUUURR\n");
   }else{
-    uLCD.cls();
-    uLCD.locate(1, 1);
+    uLCD.locate(0, 11);
+    uLCD.printf("           \n          ");
+    uLCD.locate(1, 5);
     uLCD.printf("\nError             \n                  \n");
   }
 }
@@ -218,38 +227,46 @@ void DNN(void) {
         if(gesture_index == 0 && selection == 0){
           if(music == 2){
             music = 0;  
+            point = 0;
           }else{
             music++;
+            point = 0;
           }
         }else if(gesture_index == 1 && selection == 0){
           if(music == 0){
             music = 2;
+            point = 0;
           }else{
             music--;
+            point = 0;
           }
         }else if(gesture_index == 2 && selection == 0){
           selection = 1;
           led1 = 0;
           led2 = 1;
           led3 = 1;
+          point = 0;
         }else if(gesture_index == 0 && selection == 1){
             music = 0;
             selection = 0;
             led1 = 1;
             led2 = 1;
             led3 = 1;
+            point = 0;
         }else if(gesture_index == 1 && selection == 1){
           music = 1;
           selection = 0;
           led1 = 1;
           led2 = 1;
           led3 = 1;
+          point = 0;
         }else if(gesture_index == 2 && selection == 1){
           music = 2;
           selection = 0;
           led1 = 1;
           led2 = 1;
           led3 = 1;
+          point = 0;
         }else{
           uLCD.locate(1, 1);
           uLCD.printf("\nerror             \n                  \n");
@@ -259,33 +276,54 @@ void DNN(void) {
       else if(mode==0){
 
         if(i==8){
-          uLCD.locate(0, 8);
+          uLCD.locate(0, 12);
           //uLCD.color(RED);
-          uLCD.printf("Good!");
+          if(point == 8){
+            uLCD.printf("All right!"); //right
+            point = 0;
+          }
+          else{
+            uLCD.printf("failed");
+          }
           i = 0;
+          point = 0;
         }
 
         if(gesture_index == 0 && i<8){
           //uLCD.cls();
-          uLCD.locate(i, 7);
+          uLCD.locate(i, 11);
           uLCD.printf("R");
+          
+          if( (i == 1) || (i == 3) || (i == 6) || (i == 7)){
+            point++;
+          }
+          
           i++;
         }
 
         else if(gesture_index == 1 && i<8){
           //uLCD.cls();
-          uLCD.locate(i, 7);
+          uLCD.locate(i, 11);
           uLCD.printf("L");
+          
+          if( (i == 0) || (i == 2) || (i == 7)){
+            point++;
+          }
+          
           i++;
         }
         else if(gesture_index == 2 && i<8){
           //uLCD.cls();
-          uLCD.locate(i, 7);
+          uLCD.locate(i, 11);
           uLCD.printf("U");
+          
+          if( (i == 0) || (i == 3) || (i == 4) || (i == 5) || (i == 7)){
+            point++;
+          }
+          
           i++;
         }
       
-        
       
 
       }
@@ -296,18 +334,21 @@ void DNN(void) {
 
 
 void PlayMusic_and_TaiKu(void){
+  mode = 0;
+  led1 = 1;
+  led2 = 1;
+  led3 = 1;
+  point = 0;
+  
+}
+
+void Red_Mode(void){
   mode = 1;
   led1 = 1;
   led2 = 1;
   led3 = 1;
   i = 0;
-}
-
-void Red_Mode(void){
-  mode = 0;
-  led1 = 1;
-  led2 = 1;
-  led3 = 1;
+  point = 0;
 }
 
 
@@ -318,6 +359,9 @@ void playNote(int freq) {
   }
   audio.spk.play(waveform, kAudioTxBufferSize);
 }
+
+
+
 
 void loadSignal(void)
 {
@@ -367,20 +411,29 @@ void loadSignal(void)
 
 int main(int argc, char* argv[]) {
   
+  uLCD.color(WHITE);
+  
+  threadDNN.start(DNN); //OK
+  
+  sw2.rise(Red_Mode);//OK
+  sw3.rise(PlayMusic_and_TaiKu); //OK
+
+  led3 = 1;//Ok
+  led2 = 1;//OK
+  led1 = 1;//OK
+
+  loadSignal();//OK
+   
+  uLCD.locate(1, 1);
+  uLCD.printf("\n                   \n                  \n");
+
+  uLCD.locate(0, 4);
+  uLCD.printf("Song:");
+
 
   
-  threadDNN.start(DNN);
-  sw2.rise(PlayMusic_and_TaiKu);
-  sw3.rise(Red_Mode);
-
-  led3 = 1;
-  led2 = 1;
-  led1 = 1;
-
-  loadSignal();
-
   while(1){
-    uLCDprint();
+    uLCDprint(); //OK
     for(int i = 0; i < 40; i++){
       if(mode == 0){
         int length = noteLength[40 * music + i];
